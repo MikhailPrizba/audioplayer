@@ -75,27 +75,37 @@ def addannouncement(path):
 #VOLUME
 
 def change_volume(volume):
-    volume = volume / 100  # Преобразование значения громкости из диапазона 0-100 в диапазон 0-1
-    mixer.music.set_volume(volume)
+    if Playlist.curselection():
+        volume = volume / 100  # Преобразование значения громкости из диапазона 0-100 в диапазон 0-1
+        mixer.music.set_volume(volume)
 
 def on_volume_change(event):
     volume = volume_scale.get()
     change_volume(volume)
 
+def change_volume_ann(volume):
+    if Announcement_List.curselection():
+        volume = volume / 100  # Преобразование значения громкости из диапазона 0-100 в диапазон 0-1
+        mixer.music.set_volume(volume)
 
-
+def on_volume_change_ann(event):
+    volume = volume_scale_ann.get()
+    change_volume_ann(volume)
 
 ##########################################################################################
 def playaudiomessage(message_path):
     global message_counter
     if message_path:
-        mixer.music.load(message_path)
-        mixer.music.play()
-        current_song.set("Объявление: " + os.path.basename(message_path))
         Announcement_List.selection_clear(0, END)
 
             # Выделяем текущий трек
         Announcement_List.selection_set(announcement_index)
+        volume= volume_scale_ann.get()
+        change_volume_ann(volume)
+        mixer.music.load(message_path)
+        mixer.music.play()
+        current_song.set("Объявление: " + os.path.basename(message_path))
+       
         message_counter = 0
         while pygame.mixer.music.get_busy():
             pygame.event.wait()
@@ -205,15 +215,16 @@ def playmusic():
             
             music_path = os.path.join(config.PLAYLIST_FOLDER, playlist[current_index])
 
+            Playlist.selection_clear(0, END)
+            
+            # Выделяем текущий трек
+            Playlist.selection_set(current_index)
             volume= volume_scale.get()
             change_volume(volume)
             mixer.music.load(music_path)
             mixer.music.play()
             current_song.set("Сейчас играет: " + os.path.basename(music_path))
-            Playlist.selection_clear(0, END)
-            
-            # Выделяем текущий трек
-            Playlist.selection_set(current_index)
+           
             # Ожидание завершения воспроизведения текущей музыки
 
             message_counter += 1
@@ -261,7 +272,7 @@ def stopped():
         music_thread.join()  # Ждем завершения потока не более 5 секунд
         
 
-  # Дожидаемся завершения потока
+# Дожидаемся завершения потока
 
 def on_closing():
     global music_thread
@@ -359,7 +370,7 @@ Frame_Music.columnconfigure(0, weight=1)  # Устанавливаем вес д
 # Определяем область для Announcement List и делаем ее шире
 Frame_Announcement_List = Frame(Frame_Music)
 Frame_Announcement_List.pack(side=LEFT, fill=BOTH, expand=True)  # Используем параметр expand=True
-Frame_Music.columnconfigure(1, weight=2)  # Устанавливаем вес для второй колонки
+Frame_Music.columnconfigure(1, weight=2, )  # Устанавливаем вес для второй колонки
 
 Scroll = Scrollbar(Frame_Music)
 Playlist = Listbox(
@@ -444,12 +455,14 @@ next_button.config(highlightthickness=2, highlightbackground="white")
 
 #########################################################################################################################
 #VOLUME BUTTON
+# VOLUME BUTTON
+#VOLUME BUTTON
 volume_scale = Scale(
     root,
     from_=0,
     to=100,
     orient=HORIZONTAL,
-    label="Громкость",
+    label="Громкость музыки",
     command=on_volume_change,
     length=180,       # Длина ползунка в пикселях
     troughcolor="#333333",  # Цвет фона ползунка
@@ -457,11 +470,23 @@ volume_scale = Scale(
     sliderlength=10,        # Длина ползунка в пикселях
 )
 volume_scale.set(50)  # Установите начальное значение громкости (от 0 до 100)
-volume_scale.place(x = 120, y = 10)#расположение в пространстве
+volume_scale.place(x = 10, y = 10)#расположение в пространстве
 
+volume_scale_ann = Scale(
+    root,
+    from_=0,
+    to=100,
+    orient=HORIZONTAL,
+    label="Громкость объявлений",
+    command=on_volume_change_ann,
+    length=180,       # Длина ползунка в пикселях
+    troughcolor="#333333",  # Цвет фона ползунка
+    sliderrelief="flat",    # Убирает рамку вокруг ползунка
+    sliderlength=10,        # Длина ползунка в пикселях
+)
 
-
-
+volume_scale_ann.set(50)  # Установите начальное значение громкости (от 0 до 100)
+volume_scale_ann.place(x = 10, y = 80)#расположение в пространстве
 
 
 
@@ -530,7 +555,7 @@ settings_button = Button(
     activebackground="#00CED1",
     highlightthickness=0,
 )
-settings_button.place(x=10, y=10)
+settings_button.place(x=800, y=10)
 ########################################################################################################################
 # Execute Tkinter
 root.mainloop()
