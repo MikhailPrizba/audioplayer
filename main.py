@@ -330,7 +330,6 @@ def play_previous_song():
     global current_index
     message_counter -= 1
     if current_index > 1:
-        print(current_index)
         mixer.music.stop()
         current_index -= 2
     else:
