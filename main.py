@@ -116,6 +116,30 @@ def play_selected_message(event):
     message_counter = config.ANNOUNCEMENT_SONG_NUMBER
     announcement_index = Announcement_List.curselection()[0]
     mixer.music.stop()
+
+def play_audio_playlist(message_path):
+    global message_counter
+    if message_path:
+        Playlist.selection_clear(0, END)
+    
+            # Выделяем текущий трек
+        Playlist.selection_set(current_index)
+        volume= volume_scale.get()
+        change_volume(volume)
+        mixer.music.load(message_path)
+        mixer.music.play()
+        current_song.set("Объявление: " + os.path.basename(message_path))
+        
+        while pygame.mixer.music.get_busy():
+                pygame.event.wait()
+
+
+def play_selected_playlist(event):
+    global message_counter
+    global current_index
+    message_counter -= 1
+    current_index = Playlist.curselection()[0] -1
+    mixer.music.stop()
 ###########################################################################################
 
 def select_message_folder():
@@ -215,15 +239,7 @@ def playmusic():
             
             music_path = os.path.join(config.PLAYLIST_FOLDER, playlist[current_index])
 
-            Playlist.selection_clear(0, END)
-            
-            # Выделяем текущий трек
-            Playlist.selection_set(current_index)
-            volume= volume_scale.get()
-            change_volume(volume)
-            mixer.music.load(music_path)
-            mixer.music.play()
-            current_song.set("Сейчас играет: " + os.path.basename(music_path))
+            play_audio_playlist(music_path)
            
             # Ожидание завершения воспроизведения текущей музыки
 
@@ -231,8 +247,7 @@ def playmusic():
             current_index += 1
             
             # Ожидание завершения воспроизведения текущей музыки
-            while pygame.mixer.music.get_busy():
-                pygame.event.wait()
+            
         # Ожидание завершения воспроизведения последней музыки
         while pygame.mixer.music.get_busy():
             pygame.event.wait()
@@ -289,6 +304,7 @@ def play_next_song():
     if current_index < Playlist.size():
         mixer.music.stop()
     else:
+        current_index -= 1
         mixer.music.stop()
     
 
@@ -385,6 +401,7 @@ Playlist = Listbox(
     yscrollcommand=Scroll.set,
 )
 Playlist.pack(side=LEFT, fill=BOTH)
+Playlist.bind("<Double-Button-1>", play_selected_playlist)
 Scroll.config(command=Playlist.yview)
 Scroll.pack(side=RIGHT, fill=Y)
 
@@ -454,8 +471,6 @@ next_button.place(x=220, y=225)
 next_button.config(highlightthickness=2, highlightbackground="white")
 
 #########################################################################################################################
-#VOLUME BUTTON
-# VOLUME BUTTON
 #VOLUME BUTTON
 volume_scale = Scale(
     root,
