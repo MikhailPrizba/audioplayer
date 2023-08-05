@@ -254,21 +254,12 @@ def playmusic():
                 )
 
                 playaudiomessage(message_path)
-                
             else:
-            
-
-                music_path = os.path.join(config.PLAYLIST_FOLDER, playlist[current_index])
-
+                music_path = os.path.join(
+                    config.PLAYLIST_FOLDER, playlist[current_index]
+                )
                 play_audio_playlist(music_path)
 
-                # Ожидание завершения воспроизведения текущей музыки
-
-                
-
-            # Ожидание завершения воспроизведения текущей музыки
-
-        # Ожидание завершения воспроизведения последней музыки
         while pygame.mixer.music.get_busy():
             pygame.event.wait()
 
@@ -351,7 +342,7 @@ def play_previous_song():
 
 # icon
 
-root.title("Управление музыкой")
+root.title("Shop Radio")
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
 image_icon = PhotoImage(file="images/logo.png")
