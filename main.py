@@ -31,9 +31,6 @@ ABSOLUTE_PATH = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(ABSOLUTE_PATH, "config.py")
 
 
-# Create a function to open a file
-
-
 ##########################################################################################
 # ADD
 def addmusic(path):
@@ -73,8 +70,6 @@ def addannouncement(path):
 
 ##########################################################################################
 # VOLUME
-
-
 def change_volume(volume):
     if Playlist.curselection():
         volume = (
@@ -102,6 +97,7 @@ def on_volume_change_ann(event):
 
 
 ##########################################################################################
+# play logic
 def playaudiomessage(message_path):
     global message_counter, announcement_index
     if message_path:
@@ -156,13 +152,12 @@ def play_selected_playlist(event):
 
 
 ###########################################################################################
-
-
+# select folder
 def select_message_folder():
     folder_path = filedialog.askdirectory()
     if folder_path:
         config.MESSAGE_FOLDER = folder_path
-        with open(CONFIG_PATH, "w") as config_file:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as config_file:
             config_file.write(f"MESSAGE_FOLDER = '{folder_path}'\n")
             config_file.write(
                 f"ANNOUNCEMENT_SONG_NUMBER = {config.ANNOUNCEMENT_SONG_NUMBER}\n"
@@ -176,7 +171,7 @@ def select_playlist_folder():
     folder_path = filedialog.askdirectory()
     if folder_path:
         config.PLAYLIST_FOLDER = folder_path
-        with open(CONFIG_PATH, "w") as config_file:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as config_file:
             config_file.write(f"PLAYLIST_FOLDER = '{folder_path}'\n")
             config_file.write(
                 f"ANNOUNCEMENT_SONG_NUMBER = {config.ANNOUNCEMENT_SONG_NUMBER}\n"
@@ -187,8 +182,7 @@ def select_playlist_folder():
 
 
 ##############################################################################################
-
-
+# mixlistbox
 def listboxshufle(listbox: Listbox):
     somelist = list(listbox.get(0, END))
     random.shuffle(somelist)
@@ -299,10 +293,7 @@ def stopped():
     mixer.music.stop()
     mixer.music.unload()
     if music_thread:
-        music_thread.join()  # Ждем завершения потока не более 5 секунд
-
-
-# Дожидаемся завершения потока
+        music_thread.join()  # Дожидаемся завершения потока
 
 
 def on_closing():
@@ -338,9 +329,7 @@ def play_previous_song():
 
 
 #############################################################################
-
 # icon
-
 root.title("Shop Radio")
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
@@ -391,7 +380,6 @@ ButtonMessageFolder = Button(
 ButtonMessageFolder.place(x=735, y=50)
 
 ##########################################################################
-
 Frame_Music = Frame(root, bd=2, relief=RIDGE)
 Frame_Music.place(x=330, y=100, width=570, height=250)
 
@@ -511,17 +499,12 @@ volume_scale_ann = Scale(
     sliderrelief="flat",  # Убирает рамку вокруг ползунка
     sliderlength=10,  # Длина ползунка в пикселях
 )
-
 volume_scale_ann.set(50)  # Установите начальное значение громкости (от 0 до 100)
 volume_scale_ann.place(x=10, y=80)  # расположение в пространстве
 
 
 ################################################################################################################################
-
-
 # settings
-
-
 def open_settings_window():
     settings_window = Toplevel(root)
     settings_window.title("Настройки")
@@ -554,7 +537,7 @@ def open_settings_window():
         announcements_song_number = int(message_counter_entry.get())
         config.ANNOUNCEMENT_SONG_NUMBER = announcements_song_number
         config.TEST_MODE = test_mode_var.get()
-        with open(CONFIG_PATH, "w") as config_file:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as config_file:
             config_file.write(
                 f"ANNOUNCEMENT_SONG_NUMBER = {announcements_song_number}\n"
             )
