@@ -8,7 +8,7 @@ from tkinter import filedialog
 import pygame
 from pygame import mixer
 
-import config
+import pickle
 
 # Create a GUI window
 root = Tk()
@@ -23,14 +23,39 @@ stop = False
 current_index = 0
 message_counter = 0
 announcement_index = 0
-
+settings = {}
 
 is_playlist = False
 is_announcement = False
 ABSOLUTE_PATH = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(ABSOLUTE_PATH, "config.py")
-
-
+CONFIG_PATH = os.path.join(ABSOLUTE_PATH, "config.pkl")
+#########################################################################################
+#settings
+def load_settings():
+    global settings
+    try:
+        with open(CONFIG_PATH, "rb") as config_file:
+            settings = pickle.load(config_file)
+    except FileNotFoundError:
+        # Если файл не существует, вернуть пустой словарь
+        settings = {
+            "ANNOUNCEMENT_SONG_NUMBER": 0,
+            "MESSAGE_FOLDER": "path/to/message/folder",
+            "TEST_MODE": False,
+            "PLAYLIST_FOLDER": "path/to/playlist/folder"
+        }
+    except Exception:
+        settings = {
+            "ANNOUNCEMENT_SONG_NUMBER": 0,
+            "MESSAGE_FOLDER": "path/to/message/folder",
+            "TEST_MODE": False,
+            "PLAYLIST_FOLDER": "path/to/playlist/folder"
+        }
+    return settings
+    
+def save_settings(settings):
+    with open(CONFIG_PATH, "wb") as config_file:
+        pickle.dump(settings, config_file)
 ##########################################################################################
 # ADD
 def addmusic(path):
@@ -120,7 +145,7 @@ def playaudiomessage(message_path):
 def play_selected_message(event):
     global message_counter
     global announcement_index
-    message_counter = config.ANNOUNCEMENT_SONG_NUMBER
+    message_counter = settings['ANNOUNCEMENT_SONG_NUMBER']
     announcement_index = Announcement_List.curselection()[0]
     mixer.music.stop()
 
@@ -156,28 +181,14 @@ def play_selected_playlist(event):
 def select_message_folder():
     folder_path = filedialog.askdirectory()
     if folder_path:
-        config.MESSAGE_FOLDER = folder_path
-        with open(CONFIG_PATH, "w", encoding="utf-8") as config_file:
-            config_file.write(f"MESSAGE_FOLDER = '{folder_path}'\n")
-            config_file.write(
-                f"ANNOUNCEMENT_SONG_NUMBER = {config.ANNOUNCEMENT_SONG_NUMBER}\n"
-            )
-            config_file.write(f"TEST_MODE = {config.TEST_MODE}\n")
-            config_file.write(f"PLAYLIST_FOLDER = '{config.PLAYLIST_FOLDER}'\n")
+        settings["MESSAGE_FOLDER"]= folder_path
         addannouncement(folder_path)
 
 
 def select_playlist_folder():
     folder_path = filedialog.askdirectory()
     if folder_path:
-        config.PLAYLIST_FOLDER = folder_path
-        with open(CONFIG_PATH, "w", encoding="utf-8") as config_file:
-            config_file.write(f"PLAYLIST_FOLDER = '{folder_path}'\n")
-            config_file.write(
-                f"ANNOUNCEMENT_SONG_NUMBER = {config.ANNOUNCEMENT_SONG_NUMBER}\n"
-            )
-            config_file.write(f"TEST_MODE = {config.TEST_MODE}\n")
-            config_file.write(f"MESSAGE_FOLDER = '{config.MESSAGE_FOLDER}'\n")
+        settings['PLAYLIST_FOLDER'] = folder_path
         addmusic(folder_path)
 
 
@@ -201,15 +212,16 @@ def playmusic():
     global is_announcement
     global play_state
     global message_counter
+    global settings
 
-    announcements_song_number = config.ANNOUNCEMENT_SONG_NUMBER
+    announcements_song_number = settings['ANNOUNCEMENT_SONG_NUMBER']
     stop = False
     message_counter = 0
 
     if not Playlist.get(0, END):
-        addmusic(config.PLAYLIST_FOLDER)
+        addmusic(settings['PLAYLIST_FOLDER'])
     if not Announcement_List.get(0, END):
-        addannouncement(config.MESSAGE_FOLDER)
+        addannouncement(settings['MESSAGE_FOLDER'])
     ann_list = list(Announcement_List.get(0, END))
 
     while True and is_playlist and is_announcement:
@@ -244,13 +256,13 @@ def playmusic():
                     announcement_index = 0
 
                 message_path = os.path.join(
-                    config.MESSAGE_FOLDER, ann_list[announcement_index]
+                    settings['MESSAGE_FOLDER'], ann_list[announcement_index]
                 )
 
                 playaudiomessage(message_path)
             else:
                 music_path = os.path.join(
-                    config.PLAYLIST_FOLDER, playlist[current_index]
+                    settings['PLAYLIST_FOLDER'], playlist[current_index]
                 )
                 play_audio_playlist(music_path)
 
@@ -298,6 +310,8 @@ def stopped():
 
 def on_closing():
     global music_thread
+    global settings
+    save_settings(settings)
     if music_thread:
         stopped()  # Останавливаем музыку перед выходом
     root.destroy()
@@ -307,7 +321,7 @@ def on_closing():
 def play_next_song():
     global current_index
     global message_counter
-    if not config.TEST_MODE:
+    if not settings['TEST_MODE']:
         message_counter -= 1
     if current_index < Playlist.size():
         mixer.music.stop()
@@ -519,11 +533,11 @@ def open_settings_window():
 
     message_counter_entry = Entry(settings_window)
     message_counter_entry.pack()
-    message_counter_entry.insert(0, config.ANNOUNCEMENT_SONG_NUMBER)
+    message_counter_entry.insert(0, settings['ANNOUNCEMENT_SONG_NUMBER'])
 
     test_mode_var = IntVar()
     test_mode_var.set(
-        config.TEST_MODE
+        settings['TEST_MODE']
     )  # Устанавливаем значение переменной в зависимости от конфигурации
     test_mode_checkbox = Checkbutton(
         settings_window, text="Тестовый режим", variable=test_mode_var
@@ -535,17 +549,8 @@ def open_settings_window():
 
     def save_settings():
         announcements_song_number = int(message_counter_entry.get())
-        config.ANNOUNCEMENT_SONG_NUMBER = announcements_song_number
-        config.TEST_MODE = test_mode_var.get()
-        with open(CONFIG_PATH, "w", encoding="utf-8") as config_file:
-            config_file.write(
-                f"ANNOUNCEMENT_SONG_NUMBER = {announcements_song_number}\n"
-            )
-            config_file.write(f"MESSAGE_FOLDER = '{config.MESSAGE_FOLDER}'\n")
-            config_file.write(
-                f"TEST_MODE = {test_mode_var.get()}\n"
-            )  # Сохраняем значение тестового режима
-            config_file.write(f"PLAYLIST_FOLDER = '{config.PLAYLIST_FOLDER}'\n")
+        settings["ANNOUNCEMENT_SONG_NUMBER"] = announcements_song_number
+        settings["TEST_MODE"] = test_mode_var.get()  # Сохраняем значение пер
         settings_window.destroy()
 
     save_button = Button(buttons_frame, text="Сохранить", command=save_settings)
@@ -571,4 +576,5 @@ settings_button = Button(
 settings_button.place(x=800, y=10)
 ########################################################################################################################
 # Execute Tkinter
+load_settings()
 root.mainloop()
