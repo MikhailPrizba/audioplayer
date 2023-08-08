@@ -10,6 +10,32 @@ from pygame import mixer
 
 import pickle
 
+
+
+#########################################################################################
+#settings
+ABSOLUTE_PATH = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(ABSOLUTE_PATH, "config.pkl")
+def load_settings():
+    try:
+        with open(CONFIG_PATH, "rb") as config_file:
+            settings = pickle.load(config_file)
+    
+    except Exception:
+        settings ={
+            "ANNOUNCEMENT_SONG_NUMBER": 0,
+            "MESSAGE_FOLDER": "path/to/message/folder",
+            "TEST_MODE": False,
+            "PLAYLIST_FOLDER": "path/to/playlist/folder",
+            "Volume_m": 0,
+            "Volume_a": 0, 
+        }
+    return settings
+    
+def save_settings(settings):
+    with open(CONFIG_PATH, "wb") as config_file:
+        pickle.dump(settings, config_file)
+##########################################################################################
 # Create a GUI window
 root = Tk()
 root.title("Music Player")
@@ -23,12 +49,11 @@ stop = False
 current_index = 0
 message_counter = 0
 announcement_index = 0
-settings = {}
+settings = load_settings()
 
 is_playlist = False
 is_announcement = False
-ABSOLUTE_PATH = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(ABSOLUTE_PATH, "config.pkl")
+
 #########################################################################################
 #settings
 def load_settings():
@@ -36,20 +61,14 @@ def load_settings():
     try:
         with open(CONFIG_PATH, "rb") as config_file:
             settings = pickle.load(config_file)
-    except FileNotFoundError:
-        # Если файл не существует, вернуть пустой словарь
-        settings = {
-            "ANNOUNCEMENT_SONG_NUMBER": 0,
-            "MESSAGE_FOLDER": "path/to/message/folder",
-            "TEST_MODE": False,
-            "PLAYLIST_FOLDER": "path/to/playlist/folder"
-        }
     except Exception:
-        settings = {
+        settings ={
             "ANNOUNCEMENT_SONG_NUMBER": 0,
             "MESSAGE_FOLDER": "path/to/message/folder",
             "TEST_MODE": False,
-            "PLAYLIST_FOLDER": "path/to/playlist/folder"
+            "PLAYLIST_FOLDER": "path/to/playlist/folder",
+            "Volume_m": 0,
+            "Volume_a": 0, 
         }
     return settings
     
@@ -91,9 +110,9 @@ def addannouncement(path):
     except FileNotFoundError:
         is_announcement = False
         Announcement_List.insert(END, "Папка не найдена")
+########################################################################################
 
 
-##########################################################################################
 # VOLUME
 def change_volume(volume):
     if Playlist.curselection():
@@ -105,6 +124,7 @@ def change_volume(volume):
 
 def on_volume_change(event):
     volume = volume_scale.get()
+    settings['Volume_m'] = volume
     change_volume(volume)
 
 
@@ -118,6 +138,7 @@ def change_volume_ann(volume):
 
 def on_volume_change_ann(event):
     volume = volume_scale_ann.get()
+    settings['Volume_a'] = volume
     change_volume_ann(volume)
 
 
@@ -498,7 +519,7 @@ volume_scale = Scale(
     sliderrelief="flat",  # Убирает рамку вокруг ползунка
     sliderlength=10,  # Длина ползунка в пикселях
 )
-volume_scale.set(50)  # Установите начальное значение громкости (от 0 до 100)
+volume_scale.set(settings['Volume_m'])  # Установите начальное значение громкости (от 0 до 100)
 volume_scale.place(x=10, y=10)  # расположение в пространстве
 
 volume_scale_ann = Scale(
@@ -513,7 +534,7 @@ volume_scale_ann = Scale(
     sliderrelief="flat",  # Убирает рамку вокруг ползунка
     sliderlength=10,  # Длина ползунка в пикселях
 )
-volume_scale_ann.set(50)  # Установите начальное значение громкости (от 0 до 100)
+volume_scale_ann.set(settings['Volume_a'])  # Установите начальное значение громкости (от 0 до 100)
 volume_scale_ann.place(x=10, y=80)  # расположение в пространстве
 
 
